@@ -40,7 +40,7 @@ jobs:
           rm -rf package_root
           mkdir -p package_root/.next
           cp -r .next/standalone/* package_root/
-          cp -r .next/static package_root/.next/static
+          cp -r .next/static package_root/.next
           if [ -d public ]; then cp -r public package_root/public; fi
           cp package.json package_root/
           (cd package_root && zip -r ../release.zip .)
