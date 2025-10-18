@@ -28,14 +28,22 @@ jobs:
         env:
           NEXT_PUBLIC_API_ENDPOINT: ${{ secrets.NEXT_PUBLIC_API_ENDPOINT }}
         run: | #npm install npm run build --if-present npm run test --if-present
+          set -eux
           npm ci
-          npm run build
+          npm run build 
+
+          test -f .next/standalone/server.js
+          test -d .next/static
+          ls -la .next
+          ls -la .next/static || true
+
+          rm -rf package_root
           mkdir -p package_root/.next
           cp -r .next/standalone/* package_root/
           cp -r .next/static package_root/.next/static
           if [ -d public ]; then cp -r public package_root/public; fi
           cp package.json package_root/
-          cd package_root && zip -r ../release.zip . 
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
