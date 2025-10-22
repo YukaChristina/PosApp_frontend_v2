@@ -52,7 +52,7 @@ jobs:
             "private": true,
             "version": "1.0.0",
             "scripts": {
-              "start": "node server.js"
+              "start": "next start -p ${PORT:-8080}"
             }
           }
           JSON
