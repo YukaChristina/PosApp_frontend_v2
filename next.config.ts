@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
 
-  // ✅ ESLintエラーをビルド時に無視
+  // ✅ ESLintエラーをビルド時に無視する
   eslint: {
     ignoreDuringBuilds: true,
   },
