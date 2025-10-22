@@ -47,15 +47,15 @@ jobs:
 
           # ★ ZIP内だけで使う最小 package.json（npm start → node server.js）
           cat > package_root/package.json <<'JSON'
-          {
-            "name": "app",
-            "private": true,
-            "version": "1.0.0",
-            "scripts": {
-              "start": "next start -p ${PORT:-8080}"
-            }
-          }
-          JSON
+           {
+              "name": "app",
+              "private": true,
+              "version": "1.0.0",
+              "scripts": {
+                "start": "node server.js"
+             }
+           }
+           JSON
 
           # パッケージング
           (cd package_root && zip -r ../release.zip .)
