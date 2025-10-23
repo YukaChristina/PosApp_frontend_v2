@@ -6,81 +6,58 @@ name: Build and deploy Node.js app to Azure Web App - app-002-gen10-step3-1-node
 on:
   push:
     branches:
-      - master # ← リポのデフォルトが master なら master に直してOK
+      - master            # ← リポがmainなら 'main' に変えてください
   workflow_dispatch:
-
 jobs:
+
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           cache: "npm"
-
       - name: Install & Build (Next.js standalone)
-        env:
-          NEXT_PUBLIC_API_ENDPOINT: ${{ secrets.NEXT_PUBLIC_API_ENDPOINT }}
         run: |
           set -eux
           npm ci
           npm run build
-
-          # standalone 成果物の存在確認
+          # 成果物チェック
           test -f .next/standalone/server.js
           test -d .next/static
-
-          # デプロイ用フォルダを作成
+          # パッケージング
           rm -rf package_root
           mkdir -p package_root/.next
-
-          # 必要ファイルだけコピー
           cp -r .next/standalone/* package_root/
           cp -r .next/static package_root/.next/
           if [ -d public ]; then cp -r public package_root/public; fi
-
-          # ★ ZIP内だけで使う最小 package.json（npm start → node server.js）
           cat > package_root/package.json <<'JSON'
-           {
-              "name": "app",
-              "private": true,
-              "version": "1.0.0",
-              "scripts": {
-                "start": "node server.js"
-             }
-           }
-           JSON
-
-          # パッケージング
+          { "name":"app","private":true,"version":"1.0.0","scripts":{"start":"node server.js"} }
+          JSON
           (cd package_root && zip -r ../release.zip .)
           ls -lh release.zip
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: release.zip
-          path: release.zip
-
+          name: app-bundle        # ★ アーティファクトの"論理名"（拡張子なし）
+          path: release.zip       # ★ 実ファイル
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build                  # ★ build完了を待つ
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: release.zip
-          path: .
-
+          name: app-bundle        # ★ 上と完全一致
+          path: ./artifact        # ★ フォルダに落とす
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "app-002-gen10-step3-1-node-oshima17"
           slot-name: "Production"
-          package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B567765FDED04A55AB00C7241C371370 }}
+          package: ./artifact/release.zip   # ★ 実在ファイルを指す
